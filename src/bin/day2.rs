@@ -4,7 +4,7 @@ use std::fs::read_to_string;
 
 fn main() -> Result<(), Box<Error>> {
     let data = read_to_string("./data/day2.txt")?;
-    let data: Vec<&str> = data.split_terminator('\n').collect();
+    let data: Vec<&str> = data.lines().collect();
     part1(&data);
     part2(&data);
     Ok(())
@@ -21,15 +21,15 @@ fn part1(ids: &[&str]) {
             )
         },
     );
-    println!("{}", counts.0 * counts.1);
+    println!("Part 1: {}", counts.0 * counts.1);
 }
 
 fn part2(ids: &[&str]) {
     let letters = ids.iter().find_map(|&id| find_matching_id_letters(id, ids));
     if let Some(s) = letters {
-        println!("{}", s);
+        println!("Part 2: {}", s);
     } else {
-        println!("Nothing found!");
+        println!("Part 2: Nothing found!");
     }
 }
 

@@ -5,8 +5,7 @@ use std::fs::read_to_string;
 fn main() -> Result<(), Box<Error>> {
     let data = read_to_string("./data/day1.txt")?;
     let data: Vec<i64> = data
-        .trim()
-        .split('\n')
+        .lines()
         .map(|line| line.trim_start_matches('+').parse::<i64>().unwrap_or(0i64))
         .collect();
     part1(&data);
