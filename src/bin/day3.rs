@@ -87,20 +87,6 @@ impl Fabric {
         self.grid.get(pos as usize).cloned()
     }
 
-    fn check_claim(&self, claim: &Claim) -> bool {
-        // hmm
-        for x in claim.x..(claim.x + claim.width) {
-            for y in claim.y..(claim.y + claim.height) {
-                if let Some(val) = self.get(x, y) {
-                    if val > 1 {
-                        return false;
-                    }
-                }
-            }
-        }
-        true
-    }
-
     fn inc(&mut self, x: usize, y: usize) -> Option<i32> {
         let pos = y * self.width + x;
         if pos < self.width * self.height {
@@ -117,6 +103,20 @@ impl Fabric {
                 self.inc(x, y);
             }
         }
+    }
+
+    fn check_claim(&self, claim: &Claim) -> bool {
+        // hmm
+        for x in claim.x..(claim.x + claim.width) {
+            for y in claim.y..(claim.y + claim.height) {
+                if let Some(val) = self.get(x, y) {
+                    if val > 1 {
+                        return false;
+                    }
+                }
+            }
+        }
+        true
     }
 
     fn count<P>(&self, func: P) -> usize

@@ -1,5 +1,5 @@
-use chrono::prelude::*;
 use chrono::format;
+use chrono::prelude::*;
 use std::error::Error;
 use std::fs::read_to_string;
 
@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<Error>> {
     Ok(())
 }
 
-enum EventType {
+enum EventKind {
     GuardChange,
     Sleep,
     Wake,
@@ -20,16 +20,15 @@ enum EventType {
 struct Event {
     time: DateTime<Utc>,
     guard: usize,
-    type_: EventType,
+    kind: EventKind,
 }
 
 impl Event {
     fn parse(eventStr: &str) -> Self {
-        
         Self {
             time: Utc::now(),
             guard: 0,
-            type_: EventType::GuardChange,
+            kind: EventKind::GuardChange,
         }
     }
 }
