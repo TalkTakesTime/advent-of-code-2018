@@ -1,30 +1,70 @@
-use chrono::format;
 use chrono::prelude::*;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::read_to_string;
 
 fn main() -> Result<(), Box<Error>> {
     let data = read_to_string("./data/day4.txt")?;
     let data: Vec<&str> = data.lines().collect();
-    let data = sort_by_time(&data);
-    let data = parse_events(data);
-    for d in data.iter() {
-        println!("{:?}", d);
-    }
-    // part1(&data);
-    // part2(&data);
+    let data = sort_lines_by_time(&data);
+    let events = parse_events(data);
+    let hours_by_guard = count_sleeps(&events);
+
+    part1(&hours_by_guard);
+    part2(&hours_by_guard);
     Ok(())
 }
 
-fn sort_by_time(lines: &[&str]) -> Vec<(DateTime<Utc>, String)> {
+fn part1(hours_by_guard: &HashMap<usize, HashMap<u32, usize>>) {
+    let (guard, hour) = hours_by_guard
+        .iter()
+        .max_by_key(|&(_, hour)| hour.values().sum::<usize>())
+        .unwrap();
+    println!(
+        "Part 1: {}",
+        guard * (*hour.iter().max_by_key(|&(_, count)| count).unwrap().0 as usize)
+    );
+}
+
+fn part2(hours_by_guard: &HashMap<usize, HashMap<u32, usize>>) {
+    let (guard, hour) = hours_by_guard
+        .iter()
+        .max_by_key(|&(_, hour)| hour.values().max())
+        .unwrap();
+    println!(
+        "Part 2: {}",
+        guard * (*hour.iter().max_by_key(|&(_, count)| count).unwrap().0 as usize)
+    );
+}
+
+fn count_sleeps(events: &[Event]) -> HashMap<usize, HashMap<u32, usize>> {
+    let mut hours_by_guard: HashMap<usize, HashMap<u32, usize>> = HashMap::new();
+    let (sleeps, wakes): (Vec<Event>, Vec<Event>) = events
+        .iter()
+        .filter(|e| e.kind != EventKind::GuardChange)
+        .partition(|e| e.kind == EventKind::Sleep);
+
+    for (sleep, wake) in sleeps.iter().zip(wakes.iter()) {
+        let guard = hours_by_guard.entry(sleep.guard).or_insert(HashMap::new());
+        for min in sleep.time.minute()..wake.time.minute() {
+            *guard.entry(min).or_insert(0) += 1;
+        }
+    }
+    hours_by_guard
+}
+
+fn sort_lines_by_time(lines: &[&str]) -> Vec<(DateTime<Utc>, String)> {
     let mut lines_with_time: Vec<(DateTime<Utc>, String)> = lines
         .iter()
         .map(|line| {
             let mut line_iter = line.chars();
             line_iter.next(); // skip [
             let time: String = line_iter.by_ref().take(16).collect();
-            line_iter.next(); // skip space
-            (time.parse::<DateTime<Utc>>().unwrap(), line_iter.collect())
+            line_iter.next(); // skip ]
+            (
+                Utc.datetime_from_str(&time, "%Y-%m-%d %H:%M").unwrap(),
+                line_iter.collect(),
+            )
         })
         .collect();
     lines_with_time.sort_by_key(|pair| pair.0);
@@ -46,14 +86,14 @@ fn parse_events(mut lines: Vec<(DateTime<Utc>, String)>) -> Vec<Event> {
     events
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum EventKind {
     GuardChange,
     Sleep,
     Wake,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Event {
     time: DateTime<Utc>,
     guard: usize,
@@ -78,10 +118,10 @@ impl Event {
             .collect()
     }
 
-    fn parse(time: DateTime<Utc>, guard: usize, eventStr: &str) -> Self {
-        let kind = if eventStr.contains('#') {
+    fn parse(time: DateTime<Utc>, guard: usize, event_str: &str) -> Self {
+        let kind = if event_str.contains('#') {
             EventKind::GuardChange
-        } else if eventStr.contains("falls asleep") {
+        } else if event_str.contains("falls asleep") {
             EventKind::Sleep
         } else {
             EventKind::Wake
