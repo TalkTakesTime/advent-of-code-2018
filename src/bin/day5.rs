@@ -40,12 +40,16 @@ fn react(polymer: &str) -> String {
     let mut second = 1;
 
     while second < units.len() {
-        if try_react(&mut units, first, second) == ReactionResult::NoReaction {
+        if try_react(&units, first, second) == ReactionResult::NoReaction {
             first += 1;
             second += 1;
-        } else if first != 0 {
-            first -= 1;
-            second -= 1;
+        } else {
+            units.remove(second);
+            units.remove(first);
+            if first != 0 {
+                first -= 1;
+                second -= 1;
+            }
         }
     }
 
@@ -58,12 +62,10 @@ enum ReactionResult {
     Reacted,
 }
 
-fn try_react(units: &mut Vec<char>, first: usize, second: usize) -> ReactionResult {
+fn try_react(units: &[char], first: usize, second: usize) -> ReactionResult {
     let unit1 = units[first];
     let unit2 = units[second];
     if unit1 != unit2 && unit1.to_ascii_lowercase() == unit2.to_ascii_lowercase() {
-        units.remove(second);
-        units.remove(first);
         ReactionResult::Reacted
     } else {
         ReactionResult::NoReaction
